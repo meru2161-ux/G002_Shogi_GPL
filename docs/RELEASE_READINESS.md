@@ -28,7 +28,7 @@
 - [ ] G64で、成り・駒打ち・詰み終局の最終画面を確認する
 - [ ] 既存G002 upload keyでversionCode 5のAABへ署名する（新しい鍵を作らない）
 - [ ] Play Consoleの内部テストへ署名済みvc5 AABを提出する
-- [ ] GPLv3 source repository URLとNOTICEをストアのライセンス案内へ反映する
+- [x] GPLv3 source repositoryを公開済み: `https://github.com/meru2161-ux/G002_Shogi_GPL`。Play掲載時はこのURLとNOTICEをライセンス案内へ反映する
 
 ## 今回は含めないもの
 
