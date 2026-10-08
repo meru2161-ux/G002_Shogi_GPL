@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <include
+        domain="sharedpref"
+        path="g002_local_games_v1.xml"
+        requireFlags="clientSideEncryption|deviceToDeviceTransfer" />
+</full-backup-content>

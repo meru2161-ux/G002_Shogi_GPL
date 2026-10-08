@@ -1,0 +1,21 @@
+G002 将棋
+Copyright (C) 2026 G002 contributors
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version. The full license text is in LICENSE.
+
+This distribution includes YaneuraOu at upstream commit
+c1b80eaa09fe13d5f12b1599d1ae4d53c224de30, Copyright (C) yaneurao and
+contributors, under GPL-3.0-or-later. Its corresponding Android build source is
+in third_party/YaneuraOu/. The product launches the engine as a separate USI
+process; it is not linked into the Kotlin application process.
+
+This distribution also includes the Uonuma KP256 evaluation file nn.bin from
+the official YaneuraOu release 20190212_k-p-256-32-32. Provenance and checksum:
+  https://github.com/yaneurao/YaneuraOu/releases/tag/20190212_k-p-256-32-32
+  SHA-256 CF7645F64BF6BAA5C74612799CE562752F7985923B1F0FC2E6092C998ED867F9
+
+No online account, advertising SDK, analytics SDK, API key, or personal data
+collection is included in this application.

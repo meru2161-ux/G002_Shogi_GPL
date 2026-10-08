@@ -1,0 +1,3 @@
+# Keep the vendored upstream source byte-for-byte faithful to its GPL release.
+# Its historical whitespace is intentionally not a G002 diff-quality failure.
+third_party/YaneuraOu/** whitespace=-trailing-space,-space-before-tab,-blank-at-eof

@@ -1,0 +1,26 @@
+.gradle/
+build/
+local.properties
+*.iml
+*.obj
+.idea/
+**/build/
+.android/
+.kotlin/
+
+# Local release-signing material. Never commit private keys or their passwords.
+*.jks
+*.keystore
+*.p12
+keystore.properties
+signing.properties
+app/release/
+
+# Isolated upstream source and generated artifacts used only by the Sunfish4 PoC.
+poc/sunfish4-v0.1.3/
+poc/yaneuraou/
+poc/downloads/
+poc/extracted/
+
+# Reproducible third-party source is tracked; its local build output is not.
+third_party/YaneuraOu/build/
