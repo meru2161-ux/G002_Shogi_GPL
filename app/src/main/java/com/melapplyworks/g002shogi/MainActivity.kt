@@ -434,7 +434,7 @@ private fun GameScreen(launch: GameLaunch, repository: LocalGameRepository, onSa
                             candidateCount = review.candidatesAtSource.size,
                             candidateIndex = reviewCandidateIndex,
                             onNextPage = { reviewPageIndex = TeacherReviewPages.nextIndex(reviewPageIndex, reviewPages.size) },
-                            onCandidate = { index -> reviewCandidateIndex = index; reviewPageIndex = 0 },
+                            onCandidate = { index -> reviewCandidateIndex = index },
                             onContinue = { if (session.continueAfterReview()) { state = session.state } }
                         )
                     }
@@ -558,13 +558,19 @@ private fun TeacherReviewOverlay(
                 Text("${pageIndex + 1}/${pages.size}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Text(page.body, lineHeight = 18.sp, maxLines = 4)
-            if (candidateCount > 1) {
+            if (candidateCount > 1 && pageIndex == 1) {
+                Text("比較する候補", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Row(horizontalArrangement = Arrangement.spacedBy(5.dp), modifier = Modifier.fillMaxWidth()) {
                     repeat(candidateCount) { index ->
-                        OutlinedButton(
-                            onClick = { onCandidate(index) },
-                            modifier = Modifier.weight(1f).heightIn(min = 38.dp)
-                        ) { Text("候補${index + 1}", fontSize = 11.sp) }
+                        if (index == candidateIndex) {
+                            Button(onClick = { onCandidate(index) }, modifier = Modifier.weight(1f).heightIn(min = 38.dp)) {
+                                Text("候補${index + 1}", fontSize = 11.sp)
+                            }
+                        } else {
+                            OutlinedButton(onClick = { onCandidate(index) }, modifier = Modifier.weight(1f).heightIn(min = 38.dp)) {
+                                Text("候補${index + 1}", fontSize = 11.sp)
+                            }
+                        }
                     }
                 }
             }

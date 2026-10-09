@@ -50,4 +50,12 @@ class TeacherReviewPagesTest {
         assertEquals(0, TeacherReviewPages.nextIndex(2, 3))
         assertEquals(0, TeacherReviewPages.nextIndex(8, 1))
     }
+
+    @Test fun comparisonPageShowsTheSelectedCandidateDifference() {
+        val first = TeacherReviewPages.from(comparison.copy(difference = "候補1との差です。"), null, candidate)
+        val second = TeacherReviewPages.from(comparison.copy(difference = "候補2との差です。"), null, candidate)
+
+        assertTrue(first[1].body.contains("候補1との差"))
+        assertTrue(second[1].body.contains("候補2との差"))
+    }
 }
