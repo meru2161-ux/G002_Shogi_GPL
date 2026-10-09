@@ -80,6 +80,29 @@ class UsiProtocolBackendTest {
         assertEquals("7g7f", snapshot.bestMove)
     }
 
+    @Test fun startupOptionsAreSentBeforeEvaluationIsLoaded() {
+        val channel = FakeChannel("usiok", "readyok", "readyok", "readyok", "bestmove 7g7f")
+        val backend = UsiProtocolBackend(
+            { channel },
+            UsiProtocolConfig(
+                hashOptionName = "USI_Hash",
+                startupOptions = mapOf("EvalDir" to "/data/user/0/example/files/g002-usi"),
+                pollMillis = 1
+            )
+        )
+
+        backend.analyze(UsiEngineQuery(SfenCodec.format(ShogiPositions.initial()), 1, 1, 1) { false })
+
+        assertEquals(
+            listOf(
+                "setoption name Threads value 4",
+                "setoption name USI_Hash value 32",
+                "setoption name EvalDir value /data/user/0/example/files/g002-usi",
+            ),
+            channel.writes.filter { it.startsWith("setoption name Threads") || it.startsWith("setoption name USI_Hash") || it.startsWith("setoption name EvalDir") }
+        )
+    }
+
     @Test fun failedHandshakeClosesBrokenChannelAndRetriesWithFreshOne() {
         var now = 0L
         val broken = FakeChannel()

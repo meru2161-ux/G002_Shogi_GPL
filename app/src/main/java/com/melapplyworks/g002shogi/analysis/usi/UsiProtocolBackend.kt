@@ -26,6 +26,8 @@ fun interface UsiCommandChannelFactory {
 data class UsiProtocolConfig(
     val threads: Int = 4,
     val hashMegabytes: Int = 32,
+    val hashOptionName: String = "Hash",
+    val startupOptions: Map<String, String> = emptyMap(),
     val startupTimeoutMillis: Long = 5_000,
     val stopGraceMillis: Long = 1_000,
     val pollMillis: Long = 25
@@ -62,7 +64,10 @@ class UsiProtocolBackend(
             opened.writeLine("usi")
             await(opened, "usiok", config.startupTimeoutMillis)
             opened.writeLine("setoption name Threads value ${config.threads.coerceAtLeast(1)}")
-            opened.writeLine("setoption name Hash value ${config.hashMegabytes.coerceAtLeast(1)}")
+            opened.writeLine("setoption name ${config.hashOptionName} value ${config.hashMegabytes.coerceAtLeast(1)}")
+            config.startupOptions.forEach { (name, value) ->
+                opened.writeLine("setoption name $name value $value")
+            }
             opened.writeLine("isready")
             await(opened, "readyok", config.startupTimeoutMillis)
             opened.writeLine("usinewgame")

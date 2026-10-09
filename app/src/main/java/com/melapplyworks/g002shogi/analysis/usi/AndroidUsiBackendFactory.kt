@@ -37,7 +37,12 @@ object AndroidUsiBackendFactory {
             channelFactory = UsiCommandChannelFactory {
                 ProcessUsiCommandChannel(listOf(executable.absolutePath), workDirectory)
             },
-            config = UsiProtocolConfig(threads = 4, hashMegabytes = 32)
+            config = UsiProtocolConfig(
+                threads = 4,
+                hashMegabytes = 32,
+                hashOptionName = "USI_Hash",
+                startupOptions = mapOf("EvalDir" to workDirectory.absolutePath)
+            )
         ).also { Log.i(LogTag, "Bundled KP256 USI engine prepared") }
     }.getOrElse { failure ->
         Log.e(LogTag, "Could not prepare bundled USI engine; using local fallback", failure)

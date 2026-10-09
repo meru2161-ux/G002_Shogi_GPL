@@ -25,6 +25,7 @@
 - [ ] プライバシーポリシーを外部から閲覧できるHTTPS URLで公開する
 - [ ] Play Consoleでコンテンツレーティング、Data safety、アプリのアクセス、ターゲット年齢層などの質問票に事実どおり回答する
 - [ ] G64で、KP256 engineが`usiok` / `readyok`を返し、候補3手とAI応手を返すことを確認する（USB再接続後に実施）
+- [x] G64で、G002 app UIDのARM64 KP256 child process起動と、通常AI対局の相手応手後に人間手番へ戻ることを確認済み。候補3手を含むHuman Play全項目は引き続き内部テストで確認する
 - [ ] G64で、成り・駒打ち・詰み終局の最終画面を確認する
 - [ ] 既存G002 upload keyでversionCode 5のAABへ署名する（新しい鍵を作らない）
 - [ ] Play Consoleの内部テストへ署名済みvc5 AABを提出する
