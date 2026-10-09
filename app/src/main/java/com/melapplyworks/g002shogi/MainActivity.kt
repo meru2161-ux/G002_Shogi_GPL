@@ -129,6 +129,7 @@ private fun G002App() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ModeSelectScreen(savedGame: SavedGame?, onContinue: () -> Unit, onMode: (GameMode) -> Unit) {
+    var showPrivacyPolicy by remember { mutableStateOf(false) }
     Scaffold(topBar = { CenterAlignedTopAppBar(title = { Text("G002 将棋", fontWeight = FontWeight.Bold) }) }) { padding ->
         Column(
             Modifier.padding(padding).fillMaxSize().padding(20.dp),
@@ -148,7 +149,33 @@ private fun ModeSelectScreen(savedGame: SavedGame?, onContinue: () -> Unit, onMo
             ModeCard("指導モード", "先生AIが候補3手・狙い・注意点を説明。あなたの手も比べて学べます。", "学びながら指す") { onMode(GameMode.COACHING) }
             ModeCard("AI対局モード", "説明を最小限にした、普通の人間 vs AI 対局です。", "対局を始める") { onMode(GameMode.AI_MATCH) }
             Text("オフラインで動作します。通信・課金・アカウント登録はありません。", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+            TextButton(onClick = { showPrivacyPolicy = true }) { Text("プライバシーポリシー") }
         }
+    }
+    if (showPrivacyPolicy) {
+        AlertDialog(
+            onDismissRequest = { showPrivacyPolicy = false },
+            title = { Text("G002 将棋 プライバシーポリシー") },
+            text = {
+                Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
+                    Text(
+                        "最終更新日：2026年10月9日\n\n" +
+                            "G002 将棋は、端末内で将棋対局と候補手の解析を行います。" +
+                            "氏名、メールアドレス、位置情報、連絡先、写真、広告識別子、利用状況データを収集・送信しません。" +
+                            "ログイン、広告、課金、外部AI、Firebase、解析SDKは使用しません。\n\n" +
+                            "対局と解析のためのネットワーク通信は行いません。" +
+                            "保存した対局の再開データは端末内で扱います。" +
+                            "Androidの端末移行や暗号化対応のOSバックアップに含まれる場合があり、" +
+                            "利用可否と削除は端末とGoogleアカウントのバックアップ設定に従います。" +
+                            "アプリをアンインストールすると、OSバックアップから復元されない限り端末内の保存データは削除されます。\n\n" +
+                            "個人情報を収集しないため、第三者への提供は行いません。" +
+                            "将来データ収集や通信を追加する場合は、この内容とGoogle Playの申告を更新します。\n\n" +
+                            "お問い合わせはGoogle Playストアの開発者連絡先からお願いします。"
+                    )
+                }
+            },
+            confirmButton = { TextButton(onClick = { showPrivacyPolicy = false }) { Text("閉じる") } }
+        )
     }
 }
 
