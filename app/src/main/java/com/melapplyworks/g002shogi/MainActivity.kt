@@ -39,6 +39,8 @@ import com.melapplyworks.g002shogi.analysis.usi.AndroidUsiBackendFactory
 import com.melapplyworks.g002shogi.coaching.MoveComparison
 import com.melapplyworks.g002shogi.coaching.MoveTeachingSummaryFactory
 import com.melapplyworks.g002shogi.coaching.PlayerMoveCoach
+import com.melapplyworks.g002shogi.coaching.TeacherReviewPage
+import com.melapplyworks.g002shogi.coaching.TeacherReviewPages
 import com.melapplyworks.g002shogi.game.*
 import com.melapplyworks.g002shogi.model.*
 import com.melapplyworks.g002shogi.rules.ShogiRules
@@ -231,12 +233,12 @@ private fun GameScreen(launch: GameLaunch, repository: LocalGameRepository, onSa
     var selectedDrop by remember(mode) { mutableStateOf<PieceType?>(null) }
     var promotionChoices by remember(mode) { mutableStateOf<List<Move>?>(null) }
     var selectedCandidateId by remember { mutableStateOf<String?>(null) }
-    var showReview by remember { mutableStateOf(true) }
     var showTeacherDetails by rememberSaveable(mode) { mutableStateOf(false) }
     var showCoordinates by rememberSaveable(mode) { mutableStateOf(true) }
     var confirmRestart by remember { mutableStateOf(false) }
     var confirmResign by remember { mutableStateOf(false) }
     var reviewCandidateIndex by remember { mutableIntStateOf(0) }
+    var reviewPageIndex by remember { mutableIntStateOf(0) }
     var questionMessage by remember { mutableStateOf("盤上の駒をタップして、合法手を確認できます。") }
 
     val analysis = state.analysis
@@ -258,6 +260,9 @@ private fun GameScreen(launch: GameLaunch, repository: LocalGameRepository, onSa
     val lastMove = state.records.lastOrNull()?.move
     val review = state.records.lastOrNull()?.review
     val comparison = review?.let { PlayerMoveCoach.compare(it, reviewCandidateIndex) }
+    val reviewPages = comparison?.let {
+        TeacherReviewPages.from(it, state.records.lastOrNull()?.assessment, review.candidatesAtSource.firstOrNull())
+    }.orEmpty()
 
     fun persistCurrent() {
         val saved = SavedGame(
@@ -327,7 +332,7 @@ private fun GameScreen(launch: GameLaunch, repository: LocalGameRepository, onSa
         if (session.submitHumanMove(move)) {
             state = session.state
             persistCurrent()
-            selectedSquare = null; selectedDrop = null; showReview = true; reviewCandidateIndex = 0
+            selectedSquare = null; selectedDrop = null; reviewCandidateIndex = 0; reviewPageIndex = 0
             promotionChoices = null
             showTeacherDetails = false
             questionMessage = "あなたの手を受け付けました。先生のレビューを確認できます。"
@@ -361,6 +366,10 @@ private fun GameScreen(launch: GameLaunch, repository: LocalGameRepository, onSa
 
     val screenScroll = rememberScrollState()
     val screenScope = rememberCoroutineScope()
+
+    LaunchedEffect(state.phase, state.positionId) {
+        if (state.phase == SessionPhase.REVIEWING_HUMAN) screenScroll.animateScrollTo(0)
+    }
 
     Scaffold(topBar = {
         CenterAlignedTopAppBar(
@@ -405,17 +414,32 @@ private fun GameScreen(launch: GameLaunch, repository: LocalGameRepository, onSa
                 }
             }
             HandArea("後手の持ち駒", state.position.hands[Player.GOTE].orEmpty(), Player.GOTE, selectedDrop, if (state.phase == SessionPhase.WAITING_FOR_HUMAN && state.humanPlayer == Player.GOTE) ({ type -> promotionChoices = null; selectedDrop = if (selectedDrop == type) null else type; selectedSquare = null }) else null)
-            ShogiBoard(
-                position = state.position,
-                guide = if (mode == GameMode.COACHING && selectedSquare == null && selectedDrop == null) selectedCandidate?.move else null,
-                lastMove = lastMove,
-                selected = selectedSquare,
-                legalTargets = legalTargets,
-                checkedKing = checkedKingSquare,
-                showCoordinates = showCoordinates,
-                enabled = state.phase == SessionPhase.WAITING_FOR_HUMAN,
-                onSquareTap = ::tapSquare
-            )
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                ShogiBoard(
+                    position = state.position,
+                    guide = if (mode == GameMode.COACHING && selectedSquare == null && selectedDrop == null) selectedCandidate?.move else null,
+                    lastMove = lastMove,
+                    selected = selectedSquare,
+                    legalTargets = legalTargets,
+                    checkedKing = checkedKingSquare,
+                    showCoordinates = showCoordinates,
+                    enabled = state.phase == SessionPhase.WAITING_FOR_HUMAN,
+                    onSquareTap = ::tapSquare
+                )
+                if (mode == GameMode.COACHING && state.phase == SessionPhase.REVIEWING_HUMAN && comparison != null && reviewPages.isNotEmpty()) {
+                    Box(Modifier.fillMaxWidth().align(Alignment.BottomCenter)) {
+                        TeacherReviewOverlay(
+                            pages = reviewPages,
+                            pageIndex = reviewPageIndex.coerceIn(0, reviewPages.lastIndex),
+                            candidateCount = review.candidatesAtSource.size,
+                            candidateIndex = reviewCandidateIndex,
+                            onNextPage = { reviewPageIndex = TeacherReviewPages.nextIndex(reviewPageIndex, reviewPages.size) },
+                            onCandidate = { index -> reviewCandidateIndex = index; reviewPageIndex = 0 },
+                            onContinue = { if (session.continueAfterReview()) { state = session.state } }
+                        )
+                    }
+                }
+            }
             BoardGuideLegend(mode == GameMode.COACHING, showCoordinates, onToggleCoordinates = { showCoordinates = !showCoordinates })
             HandArea("先手の持ち駒", state.position.hands[Player.SENTE].orEmpty(), Player.SENTE, selectedDrop, if (state.phase == SessionPhase.WAITING_FOR_HUMAN && state.humanPlayer == Player.SENTE) ({ type -> promotionChoices = null; selectedDrop = if (selectedDrop == type) null else type; selectedSquare = null }) else null)
 
@@ -427,11 +451,9 @@ private fun GameScreen(launch: GameLaunch, repository: LocalGameRepository, onSa
                     onRestart = ::restartGame
                 )
             } else if (mode == GameMode.COACHING) {
-                CoachingPanel(state, selectedCandidate, review, comparison, state.records.lastOrNull()?.assessment, state.records.lastOrNull()?.takeIf { !it.isHuman }?.analysisCandidate, showReview, reviewCandidateIndex,
+                CoachingPanel(state, selectedCandidate, state.records.lastOrNull()?.takeIf { !it.isHuman }?.analysisCandidate,
                     showTeacherDetails = showTeacherDetails,
                     onCandidate = { selectedCandidateId = it.id; showTeacherDetails = false; questionMessage = "${it.move.notation} の矢印と説明を表示しています。" },
-                    onReviewCandidate = { reviewCandidateIndex = it; showReview = true },
-                    onContinue = { if (session.continueAfterReview()) { state = session.state; showReview = false } },
                     onToggleTeacherDetails = { showTeacherDetails = !showTeacherDetails },
                     onQuestion = { questionMessage = it })
             } else MatchPanel(state, onResign = { confirmResign = true })
@@ -474,7 +496,7 @@ private fun GameScreen(launch: GameLaunch, repository: LocalGameRepository, onSa
 }
 
 @Composable
-private fun CoachingPanel(state: GameSessionState, selected: CandidateMove?, review: com.melapplyworks.g002shogi.coaching.UserMoveReview?, comparison: MoveComparison?, assessment: MoveAssessment?, lastAiCandidate: CandidateMove?, showReview: Boolean, reviewIndex: Int, showTeacherDetails: Boolean, onCandidate: (CandidateMove) -> Unit, onReviewCandidate: (Int) -> Unit, onContinue: () -> Unit, onToggleTeacherDetails: () -> Unit, onQuestion: (String) -> Unit) {
+private fun CoachingPanel(state: GameSessionState, selected: CandidateMove?, lastAiCandidate: CandidateMove?, showTeacherDetails: Boolean, onCandidate: (CandidateMove) -> Unit, onToggleTeacherDetails: () -> Unit, onQuestion: (String) -> Unit) {
     if (lastAiCandidate != null && (state.phase == SessionPhase.ANALYZING || state.phase == SessionPhase.WAITING_FOR_HUMAN)) {
         Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF5E7)), modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -507,12 +529,52 @@ private fun CoachingPanel(state: GameSessionState, selected: CandidateMove?, rev
             onQuestion(answer)
         }
     }
-    if (state.phase == SessionPhase.REVIEWING_HUMAN && review != null && comparison != null) {
-        if (showReview) MoveComparisonCard(comparison, assessment, review.candidatesAtSource.firstOrNull(), review.candidatesAtSource.size)
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
-            review.candidatesAtSource.indices.forEach { index -> OutlinedButton(onClick = { onReviewCandidate(index) }, modifier = Modifier.weight(1f)) { Text("候補${index + 1}") } }
+}
+
+@Composable
+private fun TeacherReviewOverlay(
+    pages: List<TeacherReviewPage>,
+    pageIndex: Int,
+    candidateCount: Int,
+    candidateIndex: Int,
+    onNextPage: () -> Unit,
+    onCandidate: (Int) -> Unit,
+    onContinue: () -> Unit
+) {
+    val page = pages[pageIndex]
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF8EC)),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 10.dp)
+            .border(1.dp, Color(0xFFE0B88C), RoundedCornerShape(16.dp))
+    ) {
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("先生レビュー", fontWeight = FontWeight.Bold, color = Color(0xFF8C4B20))
+                Spacer(Modifier.width(8.dp))
+                Text(page.title, modifier = Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
+                Text("${pageIndex + 1}/${pages.size}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Text(page.body, lineHeight = 18.sp, maxLines = 4)
+            if (candidateCount > 1) {
+                Row(horizontalArrangement = Arrangement.spacedBy(5.dp), modifier = Modifier.fillMaxWidth()) {
+                    repeat(candidateCount) { index ->
+                        OutlinedButton(
+                            onClick = { onCandidate(index) },
+                            modifier = Modifier.weight(1f).heightIn(min = 38.dp)
+                        ) { Text("候補${index + 1}", fontSize = 11.sp) }
+                    }
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(onClick = onNextPage, modifier = Modifier.weight(1f).heightIn(min = 44.dp)) {
+                    Text(if (pageIndex == pages.lastIndex) "最初へ" else "次へ")
+                }
+                Button(onClick = onContinue, modifier = Modifier.weight(1.35f).heightIn(min = 44.dp)) { Text("相手の応手を見る") }
+            }
         }
-        Button(onClick = onContinue, modifier = Modifier.fillMaxWidth()) { Text("相手の応手を見る") }
     }
 }
 
