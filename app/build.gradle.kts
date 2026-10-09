@@ -12,7 +12,7 @@ android {
         applicationId = "com.melapplyworks.g002shogi"
         minSdk = 26
         targetSdk = 36
-        versionCode = 5
+        versionCode = 106
         versionName = "1.1.0"
     }
 

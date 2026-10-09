@@ -4,7 +4,7 @@
 
 ## 今回の提出ビルド
 
-- versionCode: `5`
+- versionCode: `106`
 - versionName: `1.1.0`
 - applicationId: `com.melapplyworks.g002shogi`
 - 解析方式: オフラインのYaneuraOu KP256 USI engine（ARM64）をprimary、既存の純Kotlin合法手探索をruntime fallbackとして使用。通信・広告・ログイン・課金は含めない。
@@ -17,8 +17,8 @@
 - 実アプリ画面の候補キャプチャ: `store-assets/screenshots/`
 - プライバシーポリシー原稿: `docs/PRIVACY_POLICY_ja.md`
 - 開始画面からプライバシーポリシー全文を読めるようにした。
-- `app/build/outputs/bundle/release/app-release.aab` はARM64 engineと`nn.bin`を含む未署名の最新ビルド。公開提出にはこのビルドを既存G002 upload keyで署名する必要がある。
-- `app/release/app-release.aab`（SHA-256 `C32B4C762EFC822CBA215897E900558D36E118132D8B333F6057A121CA0653DA`）は既存アップロード証明書で署名済みだが、上記のアプリ内ポリシー表示を追加する前のビルドなので、今回の提出には使わない。
+- `app/build/outputs/bundle/release/app-release.aab` はversionCode `106`、ARM64 engineと`nn.bin`を含む未署名ビルド（SHA-256 `88440EDD74B2B63F1956470AEB97F3963515A3A1788E9027C8D0B9326E2C9046`）。公開提出にはこのビルドを既存G002 upload keyで署名する必要がある。
+- `app/release/app-release.aab`（SHA-256 `057572B4A5044E67AB636C568809AB8AB91ADC5E6373F63A2D8E03C5BD44DECB`）は既存アップロード証明書で署名済みだが、bundle manifestのversionCodeは`6`。Playが`106`以上を要求したため今回の提出には使わない。ファイルは保護している。
 
 ## 公開前に外部サービス上で必要なこと
 
@@ -28,8 +28,8 @@
 - [ ] G64で、KP256 engineが`usiok` / `readyok`を返し、候補3手とAI応手を返すことを確認する（USB再接続後に実施）
 - [x] G64で、G002 app UIDのARM64 KP256 child process起動と、通常AI対局の相手応手後に人間手番へ戻ることを確認済み。候補3手を含むHuman Play全項目は引き続き内部テストで確認する
 - [ ] G64で、成り・駒打ち・詰み終局の最終画面を確認する
-- [ ] 既存G002 upload keyでversionCode 5のAABへ署名する（新しい鍵を作らない）
-- [ ] Play Consoleの内部テストへ署名済みvc5 AABを提出する
+- [ ] 既存G002 upload keyでversionCode 106のAABへ署名する（新しい鍵を作らない）
+- [ ] Play Consoleの内部テストへ署名済みvc106 AABを提出する
 - [x] GPLv3 source repositoryを公開済み: `https://github.com/meru2161-ux/G002_Shogi_GPL`。Play掲載時はこのURLとNOTICEをライセンス案内へ反映する
 
 ## 今回は含めないもの
